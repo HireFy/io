@@ -1,0 +1,153 @@
+
+<!doctype>
+<html lang="en">
+  <head>
+    <meta content='Python2 - 个人博客' name='title' />
+    <meta content='Python2 - 个人博客' name='og:title' />
+    <title>Python2 - 个人博客</title>
+    <link href='http://localhost:4000/images/fav.png' rel='shortcut icon'>
+<link href='http://localhost:4000/stylesheets/style.css' rel='stylesheet' type='text/css' />
+<link href='http://localhost:4000/stylesheets/syntax.css' rel='stylesheet' type='text/css' />
+
+<meta content='width=device-width, initial-scale=1.0, user-scalable=no' name='viewport'>
+<meta content='text/html; charset=utf-8' http-equiv='content-type' />
+
+  <meta content='http://localhost:4000/posts/python2' property='og:url' />
+  <meta content="关于python线程的想法在python中，多线程由于GIL的原因，不能够是真正的多线程，我就尽我知道的，胡说一些。因为多线程它是由一个进程引导的，而python中一个进程要运行，需要注册GIL，它才能够在CPU上运行。那这个进程拥有..." property='og:description' />
+  <meta content="article" property="og:type" />
+
+<!-- - -->
+
+
+
+
+
+  </head>
+  <body class="lh-copy dark-gray pa0 f6 sans-serif bg-super-white">
+    <header class="tc mt4">
+      <a href="http://localhost:4000">
+        <img src="http://localhost:4000/images/scribble.png" alt="Home" width="53" height="59">
+      </a>
+      <p>个人博客</p>
+    </header>
+    <div class="mw7 bg-white mt4 mb3 center br2-ns bt bb ba-ns b--light-gray">
+      <nav class="bb b--light-gray pv4 tc" aria-label="Main">
+        
+          <a class="link blue hover-mid-gray mh2 pv1"
+             href="http://localhost:4000/">
+             Posts
+           </a>
+        
+      </nav>
+
+      <main class="tl f6 relative pa4 pa5-ns overflow-hidden">
+        
+          <div class="mb4">
+            <div class="fw600 light-silver mt1">03 May 2018</div>
+            <h1 class="ttu f3 mt0 lh-title cb mb2">
+              
+              Python2
+            </h1>
+            
+          </div>
+        
+        <div class="markdown-body">
+          <h3 id="关于python线程的想法">关于python线程的想法</h3>
+
+<p>在python中，多线程由于GIL的原因，不能够是真正的多线程，我就尽我知道的，胡说一些。
+因为多线程它是由一个进程引导的，而python中一个进程要运行，需要注册GIL，它才能够
+在CPU上运行。那这个进程拥有的线程，要运行，也需要一个GIL，才能运行。一个进程只能
+有一个！所以每次线程都会先争夺GIL的锁，拿到GIL锁的才能够运行。这就是Python多线程
+性能不怎么样的原因。相反，多进程就有多个GIL，这样运行效率就会比多线程要好得多。</p>
+
+<p>参考链接:http://www.imooc.com/article/16198</p>
+
+<p><strong>我自己写的练习</strong></p>
+
+<p>案例1</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+
+<span class="k">class</span> <span class="nc">Mythread</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c">#data = set(list(range(100)))</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'thread'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">'get a data :'</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="s">'at '</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">'</span><span class="si">%</span><span class="s">S'</span><span class="p">))</span>
+
+
+<span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+<span class="n">threads</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+    <span class="n">threadTest</span> <span class="o">=</span> <span class="n">Mythread</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">threadTest</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+    <span class="n">i</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">'is done!'</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p>案例2</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="k">def</span> <span class="nf">change</span><span class="p">():</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">'is running!'</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">': data is'</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">threadJob</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">data</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="n">change</span><span class="p">()</span>
+        <span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+
+<span class="c"># 定义一个变量</span>
+<span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="s">'M'</span>
+<span class="n">threadA</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">threadJob</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">'A'</span><span class="p">)</span>
+<span class="n">threadB</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">threadJob</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">'B'</span><span class="p">)</span>
+<span class="n">threadA</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="n">threadB</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="c">#threadA.join(0.1)</span>
+<span class="c">#threadB.join(0.1)</span>
+
+<span class="n">threadJob</span><span class="p">()</span>
+
+</code></pre></div></div>
+
+
+        </div>
+        <p class="mt4">
+  Til next time,<br>
+  俊玮
+  <span class="silver">at 00:00</span>
+</p>
+<img src="http://localhost:4000/images/scribble3.png" alt="scribble" />
+
+      </main>
+      <section class="fixed-l mw7 center w-100 top-50 tc pb4 nt4">
+  
+    <a href="http://localhost:4000/posts/scribble-the-jekyll-theme" class="no-underline f1 light-blue hover-silver nl5 fl-l ph3">‹</a>
+  
+  
+</section>
+    </div>
+    <footer class="mw7 center tc pt3 pb4 silver">
+      Built with Jekyll using <a href="http://github.com/muan/scribble" class="link silver hover-blue pv1">Scribble</a>.
+      <img src="http://localhost:4000/images/scribble2.png" alt="scribble" class="mt4 db center" />
+    </footer>
+  </body>
+</html>
