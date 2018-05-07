@@ -38,3 +38,30 @@ root_job_config_dir/
 ```
 
 在这个例子中，`common.properties`会在加载`foo1.job`,`foo2.job`,`bar1.job`,`bar2.job`,`baz1.pull`,`baz2.pull`的时候被included。`foo.properties`会在加载`foo1.job`和`foo2.job`的时候被`included`,并且在这里设置的属性会覆盖在`common.properties`中定义的属性。同样的，`bar`文件夹下也是一样的情况，`baz`文件夹下，`baz.properties`的属性设置会覆盖`bar.properties`和`common.properties`中相同的属性。
+
+### Password Encryption
+
+为了避免在配置文件中直接存储明文密码，gobblin支持在配置属性的时候对密码加密。所有这样的属性可以使用一个master password来加密或者解密，master password在运行时存储在一个可用的文件里，这个文件可以在本地也可以在HDFS里，并且有严格的安全限制措施。
+
+master password文件的URI由`encrypt.key.loc`来控制。默认情况下，gobblin会使用[org.jasypt.util.password.BasicPasswordEncryptor](http://www.jasypt.org/api/jasypt/1.8/org/jasypt/util/password/BasicPasswordEncryptor.html)。如果你安装了[JCE Unlimited Strength Policy](http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html)，你可以设置`encrypt.use.strong.encryptor=true`使gobblin使用[org.jasypt.util.password.StrongPasswordEncryptor](http://www.jasypt.org/api/jasypt/1.8/org/jasypt/util/password/StrongPasswordEncryptor.html)。
+
+通过使用`CLIPasswordEncryptor`工具来生成加密的密码。
+
+```shell
+$ gradle :gobblin-utility:assemble
+$ cd build/gobblin-utility/distributions/
+$ tar -zxf gobblin-utility.tar.gz
+$ bin/gobblin_password_encryptor.sh 
+  usage:
+   -f <master password file>   file that contains the master password used
+                               to encrypt the plain password
+   -h                          print this message
+   -m <master password>        master password used to encrypt the plain
+                               password
+   -p <plain password>         plain password to be encrypted
+   -s                          use strong encryptor
+$ bin/gobblin_password_encryptor.sh -m Hello -p Bye
+ENC(AQWoQ2Ybe8KXDXwPOA1Ziw==)
+```
+
+
