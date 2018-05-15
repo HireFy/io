@@ -56,6 +56,20 @@ for (String file : Splitter.on(',').omitEmptyStrings().split(filesToPull)) {
 
 这里根据在job配置文件中定义的要pull的文件，为每个文件创建一个`workUnit`，同时再设置一个`SOURCE_FILE_KEY`的属性，这样就设置了一个Source file。(`WorkUnit`也是继承自`State`，所以可以调用`setProp()`方法)，之后返回`workUnits`。
 
+上面的`workUnit.setProp(SOURCE_FILE_KEY, file);`设置了一个属性，`SOURCE_FILE_KEY`的值在代码开始的时候声明过
+```java
+public static final String SOURCE_FILE_KEY = "source.file";
+```
+然后，如果我的配置文件像下面这样填写的话，那么上面设置的一个`workUnit`的属性类似于`source.file=file:///home/Documents/xxxxx.json.0`
+
+```
+...
+# source configuration properties
+# comma-separated list of file URIs (supporting different schemes, e.g., file://, ftp://, sftp://, http://, etc)
+source.filebased.files.to.pull=file:///home/Documents/xxxxx.json.0,file:///home/Documents/xxxxx.json.1
+...
+```
+
 #### getExtractor方法
 
 返回一个new SimpleJsonExtractor(state)
