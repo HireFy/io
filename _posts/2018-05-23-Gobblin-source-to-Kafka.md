@@ -54,7 +54,7 @@ INFO  [TaskExecutor-0] gobblin.runtime.Fork  261 - Committing data for fork 0 of
 INFO  [TaskExecutor-0] gobblin.kafka.writer.KafkaDataWriter  211 - Successfully committed 20 records.
 ```
 不过我这里的日志中是没有看到这样的信息,我的日志中看到的部分信息如下:
-```shell
+```text
 2018-05-23 21:52:15 CST INFO  [JobScheduler-0] gobblin.example.wikipedia.WikipediaExtractor  396 - 1 record(s) retrieved for title Wikipedia:Sandbox
 2018-05-23 21:52:15 CST INFO  [JobScheduler-0] gobblin.example.wikipedia.WikipediaExtractor  228 - Will pull revisions 842576932 to 842576932 for page Wikipedia:Sandbox.
 2018-05-23 21:52:15 CST INFO  [JobScheduler-0] gobblin.runtime.TaskExecutor  159 - Executing task task_PullFromWikipediaToKafka_1527083532388_0
@@ -86,10 +86,40 @@ INFO  [TaskExecutor-0] gobblin.kafka.writer.KafkaDataWriter  211 - Successfully 
 2018-05-23 21:52:15 CST INFO  [Commit-thread-0] org.apache.hadoop.io.compress.CodecPool  151 - Got brand-new compressor [.deflate]
 ```
 
-看样子是成功了，但是可能因为被墙了的原因，所以没有看到任何数据。我可以看看是不是能够在我的服务器上跑一下，也许能够看到和上面示例给出的日志那样，看到读取到了Wikipedia的信息。
+看这样子可能是没有成功，日志里只看到提取了0条数据。
+
+我又重新运行了一遍，这次在日志中看到了正确的输出:
+```text
+2018-05-24 19:52:10 CST INFO  [TaskExecutor-0] gobblin.example.wikipedia.WikipediaExtractor  396 - 6 record(s) retrieved for title Wikipedia:Sandbox
+2018-05-24 19:52:11 CST WARN  [TaskExecutor-0] org.apache.http.client.protocol.ResponseProcessCookies  129 - Invalid cookie header: "Set-Cookie: WMF-Last-Access=24-May-2018;Path=/;HttpOnly;secure;Expires=Mon, 25 Jun 2018 00:00:00 GMT". Invalid 'expires' attribute: Mon, 25 Jun 2018 00:00:00 GMT
+2018-05-24 19:52:11 CST WARN  [TaskExecutor-0] org.apache.http.client.protocol.ResponseProcessCookies  129 - Invalid cookie header: "Set-Cookie: WMF-Last-Access-Global=24-May-2018;Path=/;Domain=.wikipedia.org;HttpOnly;secure;Expires=Mon, 25 Jun 2018 00:00:00 GMT". Invalid 'expires' attribute: Mon, 25 Jun 2018 00:00:00 GMT
+2018-05-24 19:52:11 CST INFO  [TaskExecutor-0] gobblin.example.wikipedia.WikipediaExtractor  396 - 3 record(s) retrieved for title Wikipedia:Sandbox
+2018-05-24 19:52:11 CST INFO  [TaskExecutor-0] gobblin.runtime.Task  392 - Extracted 32 data records
+2018-05-24 19:52:11 CST INFO  [TaskExecutor-0] gobblin.runtime.Task  393 - Row quality checker finished with results: 
+2018-05-24 19:52:11 CST INFO  [TaskExecutor-0] gobblin.runtime.Task  411 - Task shutdown: Fork future reaped in 2 millis
+2018-05-24 19:52:11 CST INFO  [JobScheduler-0] gobblin.runtime.GobblinMultiTaskAttempt  143 - All assigned tasks of job job_PullFromWikipediaToKafka_1527162724282 have completed in container 
+2018-05-24 19:52:11 CST INFO  [JobScheduler-0] gobblin.runtime.GobblinMultiTaskAttempt  329 - Will commit tasks directly.
+2018-05-24 19:52:11 CST INFO  [Task-committing-pool-0] gobblin.publisher.TaskPublisher  48 - All components finished successfully, checking quality tests
+2018-05-24 19:52:11 CST INFO  [Task-committing-pool-0] gobblin.publisher.TaskPublisher  50 - All required test passed for this task passed.
+2018-05-24 19:52:11 CST INFO  [Task-committing-pool-0] gobblin.publisher.TaskPublisher  52 - Cleanup for task publisher executed successfully.
+2018-05-24 19:52:11 CST INFO  [Task-committing-pool-0] gobblin.runtime.fork.Fork  287 - Committing data for fork 0 of task task_PullFromWikipediaToKafka_1527162724282_0
+2018-05-24 19:52:11 CST INFO  [Task-committing-pool-0] gobblin.writer.AsyncWriterManager  444 - Commit called, will wait for commitTimeout : 60000 ms
+2018-05-24 19:52:11 CST INFO  [Task-committing-pool-0] gobblin.writer.AsyncWriterManager  485 - Successfully committed 32 records.
+```
+
++ 要验证records是否确实被摄取到了kafka里面，可以运行kafka的消费者，就可以看到相应的信息打印在控制台上，我这里运行了kafka的消费者，在控制台确实打印了，只不过有些是乱码。另外还有一个验证的方法，我没看懂。or run Gobblin's [kafka-console pull file](https://github.com/linkedin/gobblin/blob/master/gobblin-example/src/main/resources/wikipedia-kafka.pull) which prints the events from Kafka onto the console.
 
 ### Configuration Details
 
-待续...
+Kafka writer支持所有[0.8.2 Java Kafka Producer](http://kafka.apache.org/082/javadoc/index.html?org/apache/kafka/clients/producer/KafkaProducer.html)支持的配置参数。你所要做的就是给每个producer支持的配置属性加上前缀`writer.kafka.producerConfig.`。比如，如果你想设置`acks`的参数为`all`，以确保完全确认写入，在pull文件里要这样设置`writer.kafka.producerConfig.acks=all`。在[official documentation](http://kafka.apache.org/082/documentation.html#newproducerconfigs)可以看到所有producer支持的配置属性。注意，目前gobblin是针对Kafka 0.8.2构建的，配置选项适用于新的0.8.2 java producer。
+
+下面是几个可以控制gobblin的data writer的行为的关键参数:
+
+![key_parameters](../images/key_parameters.png)
+
+### What Next?
+
+接下来，只要在你的pull文件里正确的设置writer配置，你就可以把你的source导入到Kafka里面了。Happy Ingesting!
 
 >译自[Record Sinks » Kafka](http://gobblin.readthedocs.io/en/latest/sinks/Kafka/)
+
