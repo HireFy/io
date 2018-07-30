@@ -6,6 +6,8 @@
 
 + 被称作 bean 的对象是构成应用程序的支柱也是由 Spring IoC 容器管理的。bean 是一个被实例化，组装，并通过 Spring IoC 容器所管理的对象。
 
++ 凡是写在了配置文件xml中的bean，即使没有在程序中声明，程序运行的时候也会创建一个它的实例
+
 ### Bean的生命周期
 
 + Bean的作用域，当创建Bean的时候，属性scope设置为prototype，在每次创建Bean对象的时候，都会返回一个新的bean实例，属性scope设置为singleton，每次创建创建Bean对象的时候，返回同一个实例。
@@ -14,13 +16,55 @@
 
 + Bean的后置处理器，实现了BeanPostProcessor接口的Bean，会被注册为后置处理器，然后在容器中创建这个Bean(也就是说，在配置文件中要声明这个Bean)，然后会在适当的时候调用它，比如一个bean开始初始化和初始化完成的时候
 
-### Bean的依赖
+### Bean的继承
 
 + Bean定义继承，bean 定义可以包含很多的配置信息，包括构造函数的参数，属性值，容器的具体信息例如初始化方法，静态工厂方法名，等等。
 子 bean 的定义继承父定义的配置数据。子定义可以根据需要重写一些值，或者添加其他值。
 
-在xml文件中，通过设置bean的parent属性指定父类bean的id，完成继承这一操作
+  在xml文件中，通过设置bean的parent属性指定父类bean的id，完成继承这一操作
 
-甚至可以定义一个模板的bean，设置abstract值为true，然后他就可以作为一个模板来供继承它的子类使用:
+  甚至可以定义一个模板的bean，设置abstract值为true，然后他就可以作为一个模板来供继承它的子类使用:
 
 ![模板Bean](../images/bean_template.png)
+
+### DI(依赖注入)
+
+DI主要有两种变体，一个是基于构造函数，另外一个是基于setter方法。
+
++ 基于构造函数，在要注入依赖的bean里添加<constructor-arg>标签，如果要传递一个引用，就使用标签的ref属性，但是如果想要直接传递一个值的话，就使用value属性。
+
++ 基于setter方法，同样的不过是添加<property>标签，引用的话使用ref属性，传递值的话value属性
+
+### 自动装配
+
++ byName
+
++ byType
+
++ constructor
+
+### 注解
+
+首先开启注解支持，在xml文件中添加下面的语句:
+```
+xmlns:context="http://www.springframework.org/schema/context"
+xsi:schemaLocation="http://www.springframework.org/schema/context
+                    http://www.springframework.org/schema/context/spring-context-4.0.xsd"
+```
+上面语句添加在xml文件开头的beans属性中，下面这句添加在xml内容中的开头
+```
+<context:annotation-config/>
+```
++ @Required
+  
+  用于bean属性的setter方法，它表明注解的bean属性必须在xml配置文件中配置。否则会抛出一个BeanInitializationException的异常。
+
++ @Autowired
+  + setter方法中的@Autowired
+  
+   Spring会在方法中尝试***byType***自动连接，之前没有用注解，那时候是要注入的bean中设置`autowire="byType"`。
+
+  + 属性中的@Autowired
+
+  + 构造函数中的@Autowired
+ 
