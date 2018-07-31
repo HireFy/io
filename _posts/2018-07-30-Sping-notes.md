@@ -1,3 +1,5 @@
+下面的一些笔记是在看这个网站[https://www.w3cschool.cn/wkspring/](https://www.w3cschool.cn/wkspring/)看到的，然后就想着看的时候边敲代码，边做笔记学习一下(其实写这个的时候已经是第二次看了)
+
 + Spring通过依赖注入(DI)来管理组成一个应用程序的组件，这些对象被称为Spring Beans，Spring容器会创建对象，把它们链接在一起，配置它们，并且管理它们的整个生命周期。
 
 + Spring提供了两个不同类型容器: Spring BeanFactory和Spring ApplicationContext。BeanFactory是最简单的容器，比较轻量，提供了DI基本的支持。ApplicationContext能从属性文件解析文本信息，包含了BeanFactory的所有功能。
@@ -62,9 +64,75 @@ xsi:schemaLocation="http://www.springframework.org/schema/context
 + @Autowired
   + setter方法中的@Autowired
   
-   Spring会在方法中尝试***byType***自动连接，之前没有用注解，那时候是要注入的bean中设置`autowire="byType"`。
+     Spring会在方法中尝试***byType***自动连接，之前没有用注解，那时候是要注入的bean中设置`autowire="byType"`
 
   + 属性中的@Autowired
+     当在一个类中，使用@Autowired注解了它的属性，就可以省略掉属性的setter方法，Spring会在xml文件中寻找类型匹配的Bean注入。也是***byType***
 
   + 构造函数中的@Autowired
+     当@Autowired注解这个构造方法时，Spring也是根据类型匹配找到相应的Bean来注入
  
++ @Qualifier
+
+  当使用@Autowired注解时候，可能在Beans.xml中有很多个类型相同的Bean，这时候可以通过使用@Qualifier注解来指定特定的Bean。比如`@Qualifier("student1")`
+
++ @Resource
+  
+  注解字段或者setter方法。按照***byName***形式在配置文件中寻找Bean。如果按照名称找不到Bean的话，那么会按照***byType***的形式来找
+
++ @Configuration
+
+  注解的类表示可以作为Sping Ioc容器的bean的定义的来源。使用这个注解了类以后比如`HelloConfig`之后，在HelloConfig使用@Bean注解:
+  ```java
+   @Bean 
+   public HelloWorld helloWorld(){
+      return new HelloWorld();
+   } 
+  ```
+  然后通过下面代码拿到Bean:
+  ```java
+  ApplicationContext context = new AnnotationConfigApplicationContext(HelloConfig.class);
+  ```
+  就可以通过`context.getBean("HelloWorld.class")`拿到Bean HelloWorld。
+
++ @Bean
+
+  带有@Bean注解的方法返回一个对象，这个对象被注册为在Sping应用程序上下文中的bean
+
+---------------------------------------------------
+
+### Spring AOP
+
+Spring框架一个关键的组件是***面向方面编程***(AOP)框架。面向方面编程把程序的逻辑分成了不同的部分，称之为关注点，跨一个应用程序的多个点的功能被称为横切关注点。这些横切关注点在概念上独立于应用程序的业务逻辑。比如日志记录、审计、声明式事务、安全性和性能测试(我自己加的)。
+
++ 基于XML架构
+  
+  在xml中要使用AOP的话，下载两个包:aspectjrt和aspectjweaver，maven配置在这里:
+  ```
+    <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
+        <dependency>
+	    <groupId>org.aspectj</groupId>
+	    <artifactId>aspectjrt</artifactId>
+	    <version>1.9.1</version>
+	</dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjweaver -->
+	<dependency>
+	    <groupId>org.aspectj</groupId>
+	    <artifactId>aspectjweaver</artifactId>
+	    <version>1.9.1</version>
+	</dependency>
+  ```
+
+  然后在xml文件头部添加:
+  ```
+  xmlns:aop="http://www.springframework.org/schema/aop"
+  xsi:schemaLocation="http://www.springframework.org/schema/aop
+                      http://www.springframework.org/schema/aop/spring-aop-4.0.xsd"
+  ```
+
+  然后就可以使用了
+
++ 使用@AspectJ
+
+  先在xml文件中添加`<aop:aspectj-autoproxy/>`，使用注解
