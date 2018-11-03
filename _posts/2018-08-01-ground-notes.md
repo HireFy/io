@@ -13,6 +13,8 @@ ground通过VersionSuccessor边来连接不同的Version形成VersionHistoryDAG�
 
 类型参数化确保在给出的DAG图(有向无环图)中的VersionSuccessors连接相同Version的子类。
 
+注意，上面所说到的所有类都是不可变的，如果有新的值，就只能新创建一个Version。
+
 在ground中这里提到是ground可以追踪不放在ground中的数据，比如github的仓库信息和google docs这样的在ground之外管理的数据，ground不能够在这些数据变化的时候追踪它们，但是它可以追踪它对这些数据的“观察”，它对数据的“观察”版本可以通过Ground的RichVersion的可选项来表示：比如访问的参数(端口号，协议，URI)，一个外部访问的时间戳，还有什么可选的cachedValue这类的，这些从侧面描述这次“观察”的数据。每当Ground的客户端通过aboveground API去访问一个外部参数不为空的RichVersion的时候，Ground就会获得这个外部的object，然后生成一个包含新VersionID的新的外部Version，我们称这种行为为`Schrödinger versioning scheme`:每当我们观察一个外部Version改变的时候，通过上面的操作，Ground就像追踪一个数据放在Ground中的数据一样。
 
 ---
@@ -36,4 +38,8 @@ Ground的公共API中心围绕着三个派生自Item的类:Node, Edge, Graph
 
 ---
 
+## Lineage Graphs
+世系图，位于模型最上层
 
+在看文档的时候发现有一句话，解释了Lineage的作用。
+> For example, we might want to record that Sue imported nltk.py in her churn.py script; this is captured by a LineageEdge between a PrincipalVersion (representing Sue) and an EdgeVersion (representing the dependency between the two files).
